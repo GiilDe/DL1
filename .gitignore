@@ -278,6 +278,9 @@ $RECYCLE.BIN/
 
 Part0_Intro.ipynb
 Part1_Datasets.ipynb
+Part2_KNN.ipynb
+Part3_LinearClassifier.ipynb
+Part4_LinearRegression.ipynb
 
 
 # End of https://www.gitignore.io/api/python,pycharm,windows,osx,linux
