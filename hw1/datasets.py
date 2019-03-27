@@ -1,5 +1,4 @@
 import numpy as np
-
 import torch
 from torch.utils.data import Dataset
 
@@ -28,15 +27,12 @@ class RandomImageDataset(Dataset):
         # Bonus if you make sure to always return the same image for the
         # same index (make it deterministic per index), but don't mess-up
         # RNG state outside this method.
-
-        # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
+        img = torch.zeros(self.image_dim)
+        imgrand = img.random_(0, 255)
+        print(imgrand)
 
     def __len__(self):
-        # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
+        return self.num_samples
 
 
 class SubsetDataset(Dataset):
@@ -70,3 +66,6 @@ class SubsetDataset(Dataset):
         raise NotImplementedError()
         # ========================
 
+
+ds = RandomImageDataset(1,1,3,4,5)
+x = ds[0]
