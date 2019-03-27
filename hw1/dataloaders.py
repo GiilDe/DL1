@@ -3,7 +3,7 @@ import math
 import numpy as np
 import torch
 import torch.utils.data.sampler as sampler
-from torch.utils.data import Datasetboilerplate
+from torch.utils.data import Dataset
 
 
 def create_train_validation_loaders(dataset: Dataset, validation_ratio,
