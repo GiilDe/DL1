@@ -1,4 +1,4 @@
-import numpy as np
+#import numpy as np
 import torch
 from torch.utils.data import Dataset
 
@@ -29,7 +29,8 @@ class RandomImageDataset(Dataset):
         # RNG state outside this method.
         img = torch.zeros(self.image_dim)
         imgrand = img.random_(0, 255)
-        print(imgrand)
+        label = torch.randint(0, self.num_classes-1)
+        return imgrand, label
 
     def __len__(self):
         return self.num_samples
@@ -68,4 +69,6 @@ class SubsetDataset(Dataset):
 
 
 ds = RandomImageDataset(1,1,3,4,5)
-x = ds[0]
+img, label = ds[0]
+print(img)
+print(label)
