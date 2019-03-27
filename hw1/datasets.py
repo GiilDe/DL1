@@ -37,8 +37,7 @@ class RandomImageDataset(Dataset):
         return imgrand, label
 
     def __len__(self):
-        return self.num_samples
-
+        return self.num_samples #TODO make sure
 
 class SubsetDataset(Dataset):
     """
@@ -61,15 +60,13 @@ class SubsetDataset(Dataset):
     def __getitem__(self, index):
         # TODO: Return the item at index + offset from the source dataset.
         # Make sure to raise an IndexError if index is out of bounds.
+        if index > self.subset_len:
+            raise IndexError
+        return self.source_dataset[index + self.offset]
 
-        # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
 
     def __len__(self):
-        # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
+        return self.subset_len
 
 
 ds = RandomImageDataset(1,1,3,4,5)
