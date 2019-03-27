@@ -79,10 +79,19 @@ class KNNClassifier(object):
         #   (zero explicit loops). Hint: Open the expression (a-b)^2.
 
         dists = torch.tensor([])
-        # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
 
+        # for each row of a matrix A returns a vector of the sum of each row with sqaured elements
+        def get_squared_sum(matrix: Tensor):
+            squared = torch.tensor([])
+            matrix.mul(matrix, out=squared)
+            return squared.sum()
+
+        train_sum_vector = get_squared_sum(self.x_train) #will give us the a^2 part in the sum
+        test_sum_vector = get_squared_sum(x_test) #will give us the b^2 part in the sum
+        middle_multi = torch.mm(self.x_train, x_test.t()) #will give us the a*b part in the sum
+        middle_multi = middle_multi.mul(other=2, out=middle_multi)
+
+        dists = train_sum_vector - middle_multi + test_sum_vector
         return dists
 
 

@@ -1,4 +1,4 @@
-#import numpy as np
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 
@@ -32,7 +32,7 @@ class RandomImageDataset(Dataset):
             return self.cache[index]
         img = torch.zeros(self.image_dim)
         imgrand = img.random_(0, 255)
-        label = torch.randint(0, self.num_classes-1)
+        label = np.random.randint(low=0, high=self.num_classes)
         self.cache[index] = imgrand, label
         return imgrand, label
 
@@ -69,7 +69,10 @@ class SubsetDataset(Dataset):
         return self.subset_len
 
 
-ds = RandomImageDataset(1,1,3,4,5)
+ds = RandomImageDataset(1, 5, 3, 4, 5)
 img, label = ds[0]
+img2, label2 = ds[0]
 print(img)
 print(label)
+print(img2)
+print(label2)
