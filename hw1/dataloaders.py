@@ -1,5 +1,5 @@
-import math
 
+import math
 import numpy as np
 import torch
 import torch.utils.data.sampler as sampler
@@ -21,16 +21,19 @@ def create_train_validation_loaders(dataset: Dataset, validation_ratio,
     if not(0.0 < validation_ratio < 1.0):
         raise ValueError(validation_ratio)
 
+    validation_size = len(dataset)*validation_ratio
+    test_size = len(dataset) - validation_size
+
+    validation, train = torch.utils.data.random_split(dataset, [validation_size, test_size])
+
     # TODO: Create two DataLoader instances, dl_train and dl_valid.
     # They should together represent a train/validation split of the given
     # dataset. Make sure that:
     # 1. Validation set size is validation_ratio * total number of samples.
     # 2. No sample is in both datasets. You can select samples at random
     #    from the dataset.
-
-    # ====== YOUR CODE: ======
-    raise NotImplementedError()
-    # ========================
+    dl_train = torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+    dl_valid = torch.utils.data.DataLoader(validation, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
     return dl_train, dl_valid
 
