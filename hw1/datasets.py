@@ -20,6 +20,7 @@ class RandomImageDataset(Dataset):
         self.num_classes = num_classes
         self.num_samples = num_samples
         self.image_dim = (C, W, H)
+        self.cache = {}
 
     def __getitem__(self, index):
 
@@ -27,9 +28,12 @@ class RandomImageDataset(Dataset):
         # Bonus if you make sure to always return the same image for the
         # same index (make it deterministic per index), but don't mess-up
         # RNG state outside this method.
+        if index in self.cache:
+            return self.cache[index]
         img = torch.zeros(self.image_dim)
         imgrand = img.random_(0, 255)
         label = torch.randint(0, self.num_classes-1)
+        self.cache[index] = imgrand, label
         return imgrand, label
 
     def __len__(self):
