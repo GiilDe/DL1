@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from torch import Tensor
 from torch.utils.data import Dataset, DataLoader
+from collections import Counter
 
 import cs236605.dataloader_utils as dataloader_utils
 from . import dataloaders
@@ -36,9 +37,6 @@ class KNNClassifier(object):
         :return: A tensor of shape (N,) containing the predicted classes.
         """
 
-        # Calculate distances between training and test samples
-        dist_matrix = self.calc_distances(x_test)
-
         # TODO: Implement k-NN class prediction based on distance matrix.
         # For each training sample we'll look for it's k-nearest neighbors.
         # Then we'll predict the label of that sample to be the majority
@@ -46,6 +44,8 @@ class KNNClassifier(object):
 
         n_test = x_test.shape[0]
         y_pred = torch.zeros(n_test, dtype=torch.int64)
+        # Calculate distances between training and test samples
+        dist_matrix = self.calc_distances(x_test)
 
         for i in range(n_test):
             # TODO:
@@ -53,7 +53,17 @@ class KNNClassifier(object):
             # - Set y_pred[i] to the most common class among them
 
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+
+            dist_matrix2 = dist_matrix
+            # finds k nearest indices
+            k_nearest_classes = []
+            for j in range(self.k):
+                min_idx = torch.argmin(dist_matrix2[:,i])
+                dist_matrix2[min_idx][i] = np.inf
+                k_nearest_classes.append(self.y_train[min_idx])
+            # checks the majority class
+            c = Counter(k_nearest_classes)
+            y_pred[i] = c.most_common(1)[0][0]
             # ========================
 
         return y_pred
@@ -77,12 +87,12 @@ class KNNClassifier(object):
         #   explicit loop.
         # - Full credit will be given for a fully vectorized implementation
         #   (zero explicit loops). Hint: Open the expression (a-b)^2.
-
-        dists = torch.tensor([])
+        '''
+        dists = torch.Tensor()
 
         # for each row of a matrix A returns a vector of the sum of each row with sqaured elements
         def get_squared_sum(matrix: Tensor):
-            squared = torch.tensor([])
+            squared = torch.Tensor()
             matrix.mul(matrix, out=squared)
             return squared.sum()
 
@@ -94,6 +104,17 @@ class KNNClassifier(object):
         dists = train_sum_vector - middle_multi + test_sum_vector
         return dists
 
+        '''
+        Sigma_train_2 = torch.sum(self.x_train * self.x_train, dim=1).reshape(1, -1)
+        Sigma_test_2 = (torch.sum(x_test * x_test, dim=1)).reshape(-1, 1)
+        Sigma_train_2 = Sigma_train_2.repeat(x_test.shape[0], 1)
+        Sigma_test_2 = Sigma_test_2.repeat(1, self.x_train.shape[0])
+        Sigma_train_2 = Sigma_train_2.t()
+        Sigma_test_2 = Sigma_test_2.t()
+        Sigma_train_test = -2 * torch.mm(self.x_train,x_test.t())
+        dists = Sigma_train_2+Sigma_test_2+Sigma_train_test
+        dists = torch.sqrt(dists)
+        return dists
 
 def accuracy(y: Tensor, y_pred: Tensor):
     """
@@ -110,7 +131,12 @@ def accuracy(y: Tensor, y_pred: Tensor):
 
     accuracy = None
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+
+    equal = 0
+    for i in range (len(y)):
+        if y[i] == y_pred[i]:
+            equal += 1
+    accuracy = equal/len(y)
     # ========================
 
     return accuracy
