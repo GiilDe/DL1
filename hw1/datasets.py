@@ -60,8 +60,8 @@ class SubsetDataset(Dataset):
     def __getitem__(self, index):
         # TODO: Return the item at index + offset from the source dataset.
         # Make sure to raise an IndexError if index is out of bounds.
-        if index > self.subset_len:
-            raise IndexError
+        if index >= self.subset_len or index < 0 :
+            raise IndexError('')
         return self.source_dataset[index + self.offset]
 
 
