@@ -39,6 +39,7 @@ class RandomImageDataset(Dataset):
     def __len__(self):
         return self.num_samples #TODO make sure
 
+
 class SubsetDataset(Dataset):
     """
     A dataset that wraps another dataset, returning a subset from it.
