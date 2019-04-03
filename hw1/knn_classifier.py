@@ -133,9 +133,9 @@ def cross_validation(ds_train: Dataset, model, num_folds):
     for i in range(num_folds):
         train_data, valid_data = dataloaders.create_train_validation_loaders(ds_train, validation_ratio=1/num_folds)
         model.train(train_data)
-        for objs, y in valid_data:
-            y_pred = model.predict(objs)
-            accuracies.append(accuracy(y, y_pred))
+        x_valid, y_valid = dataloader_utils.flatten(valid_data)
+        y_pred = model.predict(x_valid)
+        accuracies.append(accuracy(y_valid, y_pred))
     return accuracies
 
 
