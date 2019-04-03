@@ -53,19 +53,12 @@ class KNNClassifier(object):
             # - Set y_pred[i] to the most common class among them
 
             # ====== YOUR CODE: ======
-
-            dist_matrix2 = dist_matrix
-            # finds k nearest indices
-            k_nearest_classes = []
-            for j in range(self.k):
-                min_idx = torch.argmin(dist_matrix2[:,i])
-                dist_matrix2[min_idx][i] = np.inf
-                k_nearest_classes.append(self.y_train[min_idx])
-            # checks the majority class
-            c = Counter(k_nearest_classes)
-            y_pred[i] = c.most_common(1)[0][0]
+            idx = torch.topk(dist_matrix[:,i], self.k, largest=False)[1]
+            classes = torch.zeros(self.n_classes)
+            for j in idx:
+                classes[self.y_train[j]] += 1
+            y_pred[i] = torch.argmax(classes)
             # ========================
-
         return y_pred
 
     def calc_distances(self, x_test: Tensor):
