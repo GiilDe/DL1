@@ -3,7 +3,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from collections import namedtuple
 
-from .losses import ClassifierLoss
+from losses import ClassifierLoss
 
 
 class LinearClassifier(object):
@@ -21,10 +21,11 @@ class LinearClassifier(object):
         # TODO: Create weights tensor of appropriate dimensions
         # Initialize it from a normal dist with zero mean and the given std.
 
-        self.weights = None
-        # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
+        self.weights = torch.Tensor()
+        mean_t = torch.zeros((n_features+1, n_classes))
+        std_t = weight_std * torch.ones((n_features+1, n_classes))
+        torch.normal(mean=mean_t, std=std_t, out=weights)
+
 
     def predict(self, x: Tensor):
         """
@@ -123,3 +124,12 @@ class LinearClassifier(object):
         # ========================
 
         return w_images
+
+
+
+
+weights = torch.zeros((3, 3))
+mean_t = torch.zeros((3,3))
+std_t = 0.001*torch.ones((3,3))
+torch.normal(mean=mean_t, std=std_t, out=weights)
+print(weights)
