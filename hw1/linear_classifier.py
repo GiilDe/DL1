@@ -43,11 +43,10 @@ class LinearClassifier(object):
         # Calculate the score for each class using the weights and
         # return the class y_pred with the highest score.
 
-        y_pred, class_scores = None, None
-        # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
-
+        y_pred, class_scores = [], torch.Tensor()
+        class_scores = x@self.weights #TODO check bias
+        for i in range(len(x)):
+            y_pred.append(torch.argmax(x[i, :]))
         return y_pred, class_scores
 
     @staticmethod
