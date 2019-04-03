@@ -3,7 +3,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from collections import namedtuple
 
-from losses import ClassifierLoss
+from .losses import ClassifierLoss
 
 
 class LinearClassifier(object):
@@ -64,10 +64,8 @@ class LinearClassifier(object):
         # labels to the ground truth labels to obtain the accuracy (in %).
         # Do not use an explicit loop.
 
-        acc = None
-        # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
+        equal = len(y) - len(torch.nonzero(y - y_pred))
+        acc = equal / len(y)
 
         return acc * 100
 
