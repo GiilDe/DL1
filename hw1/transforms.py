@@ -27,7 +27,15 @@ class BiasTrick(object):
         # Make sure to use the same data type.
 
         # ====== YOUR CODE: ======
-
+        one = torch.Tensor([1])
+        print(tensor)
+        to_return = torch.cat((tensor, one))
+        return to_return
         # ========================
 
 
+
+b = BiasTrick()
+x = b(torch.Tensor([1,2,3]))
+y = torch.Tensor([4,5])
+print(x)
