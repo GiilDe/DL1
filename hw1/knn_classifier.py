@@ -128,6 +128,17 @@ def accuracy(y: Tensor, y_pred: Tensor):
     return accuracy
 
 
+def cross_validation(ds_train: Dataset, model, num_folds):
+    accuracies = []
+    for i in range(num_folds):
+        train_data, valid_data = dataloaders.create_train_validation_loaders(ds_train, validation_ratio=1/num_folds)
+        model.train(train_data)
+        for objs, y in valid_data:
+            y_pred = model.predict(objs)
+            accuracies.append(accuracy(y, y_pred))
+    return accuracies
+
+
 def find_best_k(ds_train: Dataset, k_choices, num_folds):
     """
     Use cross validation to find the best K for the kNN model.
@@ -143,7 +154,6 @@ def find_best_k(ds_train: Dataset, k_choices, num_folds):
     accuracies = []
 
     for i, k in enumerate(k_choices):
-        model = KNNClassifier(k)
 
         # TODO: Train model num_folds times with different train/val data.
         # Don't use any third-party libraries.
@@ -151,9 +161,8 @@ def find_best_k(ds_train: Dataset, k_choices, num_folds):
         # that means that it's not really k-fold CV since it will be a
         # different split each iteration), or implement something else.
 
-        # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
+        model = KNNClassifier(k)
+        accuracies.append(cross_validation(ds_train, model, num_folds))
 
     best_k_idx = np.argmax([np.mean(acc) for acc in accuracies])
     best_k = k_choices[best_k_idx]
