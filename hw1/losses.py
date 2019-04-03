@@ -55,9 +55,10 @@ class SVMHingeLoss(ClassifierLoss):
 
         loss = None
         ones_vector = torch.ones(1, len(x_scores[0]))
-        y_m = y@ones_vector
-        s_yi = torch.gather(x_scores, 1, torch.tensor(y_m))
+        y_m = y.t()@ones_vector
+        s_yi = torch.gather(x_scores, 1, y_m)
 
+        m = x_scores - s_yi + self.delta
 
 
         # TODO: Save what you need for gradient calculation in self.grad_ctx
@@ -79,6 +80,9 @@ class SVMHingeLoss(ClassifierLoss):
         # ========================
 
         return grad
+
+
+
 
 x_scores = torch.Tensor([[1,2,3],[1,2,3],[1,2,3],[1,2,3]])
 y = torch.Tensor([[0,0,1,2]])
