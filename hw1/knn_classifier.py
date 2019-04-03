@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 from collections import Counter
 
 import cs236605.dataloader_utils as dataloader_utils
-#from . import dataloaders
+from . import dataloaders
 
 
 class KNNClassifier(object):
@@ -100,26 +100,10 @@ class KNNClassifier(object):
         train_sum_vector = get_squared_sum(self.x_train).reshape((n_train,1)) #will give us the a^2 part in the sum
         test_sum_vector = get_squared_sum(x_test).reshape((1,n_test)) #will give us the b^2 part in the sum
         middle_multi = self.x_train@x_test.t() #will give us the a*b part in the sum
-        ones_vector1 = torch.ones(1,len(train_sum_vector))
-        ones_vector2 = torch.ones(len(test_sum_vector),1)
+        ones_vector1 = torch.ones(1,len(test_sum_vector))
+        ones_vector2 = torch.ones(len(train_sum_vector),1)
         dists = train_sum_vector@ones_vector1 - 2*middle_multi + ones_vector2@test_sum_vector
         return dists
-
-
-        '''
-                Sigma_train_2 = torch.sum(self.x_train * self.x_train, dim=1).reshape(1, -1)
-        Sigma_test_2 = (torch.sum(x_test * x_test, dim=1)).reshape(-1, 1)
-        Sigma_train_2 = Sigma_train_2.repeat(x_test.shape[0], 1)
-        Sigma_test_2 = Sigma_test_2.repeat(1, self.x_train.shape[0])
-        Sigma_train_2 = Sigma_train_2.t()
-        Sigma_test_2 = Sigma_test_2.t()
-        Sigma_train_test = -2 * torch.mm(self.x_train,x_test.t())
-        dists = Sigma_train_2+Sigma_test_2+Sigma_train_test
-        dists = torch.sqrt(dists)
-        return dists
-        
-        '''
-
 
 def accuracy(y: Tensor, y_pred: Tensor):
     """
@@ -175,6 +159,3 @@ def find_best_k(ds_train: Dataset, k_choices, num_folds):
     best_k = k_choices[best_k_idx]
 
     return best_k, accuracies
-
-m1 = torch.Tensor([[1,2,1,2],[1,2,1,2]])
-print(m1.reshape((4,2)))
