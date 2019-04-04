@@ -26,13 +26,9 @@ class BiasTrick(object):
         # TODO: Add a 1 at the end of the given tensor.
         # Make sure to use the same data type.
 
-        one = torch.ones(1,dtype=tensor.dtype)
-        return torch.cat((tensor, one))
+        one = torch.ones(dtype=tensor.dtype)
+        cat_one = torch.cat((tensor, one))
+        return cat_one
 
 
 
-
-b = BiasTrick()
-x = b(torch.Tensor([1,2,3]))
-y = torch.Tensor([4,5])
-print(x)

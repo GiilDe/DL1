@@ -2,12 +2,11 @@ import torch
 from torch import Tensor
 from torch.utils.data import DataLoader
 from collections import namedtuple
-
 from .losses import ClassifierLoss
+import math
 
 
 class LinearClassifier(object):
-
     def __init__(self, n_features, n_classes, weight_std=0.001):
         """
         Initializes the linear classifier.
@@ -21,11 +20,9 @@ class LinearClassifier(object):
         # TODO: Create weights tensor of appropriate dimensions
         # Initialize it from a normal dist with zero mean and the given std.
 
-        self.weights = torch.Tensor()
-        mean_t = torch.zeros((n_features+1, n_classes))
-        std_t = weight_std * torch.ones((n_features+1, n_classes))
-        torch.normal(mean=mean_t, std=std_t, out=weights)
-
+        sigma = math.sqrt(weight_std)
+        rand_weights = torch.randn((n_features, n_classes))
+        self.weights = sigma*rand_weights
 
     def predict(self, x: Tensor):
         """
@@ -43,10 +40,11 @@ class LinearClassifier(object):
         # Calculate the score for each class using the weights and
         # return the class y_pred with the highest score.
 
-        y_pred, class_scores = [], torch.Tensor()
-        class_scores = x@self.weights #TODO check bias
+        y_pred = torch.zeros(len(x), dtype=torch.int64)
+        class_scores = torch.Tensor()
+        class_scores = x@self.weights
         for i in range(len(x)):
-            y_pred.append(torch.argmax(x[i, :]))
+            y_pred[i] = torch.argmax(class_scores[i, :])
         return y_pred, class_scores
 
     @staticmethod

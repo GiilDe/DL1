@@ -56,7 +56,7 @@ class SVMHingeLoss(ClassifierLoss):
         loss = None
         ones_vector = torch.ones(1, len(x_scores[0]))
         y_m = y.t()@ones_vector
-        s_yi = torch.gather(x_scores, 1, y_m)
+        s_yi = torch.gather(x_scores, dim=1, index=y_m)
 
         m = x_scores - s_yi + self.delta
 
@@ -82,8 +82,7 @@ class SVMHingeLoss(ClassifierLoss):
         return grad
 
 
-
-
+'''
 x_scores = torch.Tensor([[1,2,3],[1,2,3],[1,2,3],[1,2,3]])
 y = torch.Tensor([[0,0,1,2]])
 ones_vector = torch.ones(1, len(x_scores[0]))
@@ -91,3 +90,4 @@ y_m = y.t()@ones_vector
 print(y_m)
 s_yi = torch.gather(input=x_scores, dim=1, index=y_m)
 print(s_yi)
+'''
