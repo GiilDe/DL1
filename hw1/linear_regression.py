@@ -29,13 +29,13 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
 
         # TODO: Calculate the model prediction, y_pred
 
-        y_pred = X@self.weights_ # todo : check what about the bias
+        y_pred = X@self.weights_  # todo : check what about the bias
         return y_pred
 
     def fit(self, X, y):
         """
         Fit optimal weights to data using closed form solution.
-        :param X: A tensor of shape (N,n_features_) where N is the batch size.
+        :param X: A tensor of shape (N, n_features_) where N is the batch size.
         :param y: A tensor of shape (N,) where N is the batch size.
         """
         X, y = check_X_y(X, y)
@@ -43,8 +43,8 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
         # TODO: Calculate the optimal weights using the closed-form solution
         # Use only numpy functions.
 
-        X_biased = BiasTrickTransformer().transform(X)
-        w_opt = np.linalg.inv(X_biased@X_biased.transpose())@X_biased@y
+        A = X.dot(X.transpose())
+        w_opt = np.linalg.inv(A).dot(X).dot(y)
 
         self.weights_ = w_opt
         return w_opt
@@ -67,9 +67,8 @@ class BiasTrickTransformer(BaseEstimator, TransformerMixin):
 
         # TODO: Add bias term to X as the first feature.
 
-        l = X.shape[0] if X.ndim >=2 else 1
-        ones = np.ones(l)
-        return np.append(ones.reshape((l,1)),X, axis=1)
+        ones = np.ones((len(X), 1))
+        return np.append(ones, X, axis=1)
 
 class BostonFeaturesTransformer(BaseEstimator, TransformerMixin):
     """
@@ -126,28 +125,32 @@ def top_correlated_features(df: DataFrame, target_feature, n=5):
 
     # TODO: Calculate correlations with target and sort features by it
 
+    def get_corr(x):
+        x_expect = np.mean(x)
+        x_normalized = (x - x_expect).to_numpy()
+        nominator = x_normalized.transpose() @ y_normalized
+        denominator2 = np.sqrt(x_normalized.transpose() @ x_normalized)
+        corr = nominator / (denominator1 * denominator2)
+        return corr
+
     correlation = []
     y = df[target_feature]
     y_expect = np.mean(y)
-    temp_y_vec = y - y_expect
-    mechane1 = np.sqrt(temp_y_vec.to_numpy().transpose() @ temp_y_vec.to_numpy())
-    for feature_name, x in df.iteritems():
-        x_expect = np.mean(x)
-        temp_x_vec = x - x_expect
-        mone = temp_x_vec.to_numpy().transpose()@temp_y_vec.to_numpy()
-        mechane2 = np.sqrt(temp_x_vec.to_numpy().transpose()@temp_x_vec.to_numpy())
-        correlation.append(mone/(mechane1*mechane2))
+    y_normalized = (y - y_expect).to_numpy()
+    denominator1 = np.sqrt(y_normalized.transpose()@y_normalized)
+    for _, x in df.iteritems():
+        corr = get_corr(x)
+        correlation.append(corr)
 
-    feature_idx = df.columns.get_loc(feature_name)
+    feature_idx = df.columns.get_loc(target_feature)
     correlation[feature_idx] = 0
     abs_corr = np.abs(correlation)
-    closest = torch.topk(torch.Tensor(abs_corr), n)[1]
-    to_Return = [(i, correlation[i], abs_corr[i]) for i in closest]
+    closest_indices = torch.topk(torch.Tensor(abs_corr), n)[1]
+    to_Return = [(i, correlation[i], abs_corr[i]) for i in closest_indices]
+    to_Return = sorted(to_Return, key=lambda x: x[2], reverse=True)
 
-    to_Return = sorted(to_Return, key=lambda x: x[2])
-
-    top_n_features = [df.columns[i] for i,_,_ in to_Return]
-    top_n_corr = [j for _,j,_ in to_Return]
+    top_n_features = [df.columns[i] for i, _, _ in to_Return]
+    top_n_corr = [j for _, j, _ in to_Return]
 
     return top_n_features, top_n_corr
 
