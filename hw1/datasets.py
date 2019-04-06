@@ -69,11 +69,3 @@ class SubsetDataset(Dataset):
     def __len__(self):
         return self.subset_len
 
-
-ds = RandomImageDataset(1, 5, 3, 4, 5)
-img, label = ds[0]
-img2, label2 = ds[0]
-print(img)
-print(label)
-print(img2)
-print(label2)
