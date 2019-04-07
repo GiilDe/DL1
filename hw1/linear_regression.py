@@ -43,11 +43,11 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
         # TODO: Calculate the optimal weights using the closed-form solution
         # Use only numpy functions.
 
+        X = X.transpose()
         A = X@X.transpose()
         w_opt = np.linalg.inv(A).dot(X).dot(y)
-
         self.weights_ = w_opt
-        return w_opt
+        return self
 
     def fit_predict(self, X, y):
         return self.fit(X, y).predict(X)
