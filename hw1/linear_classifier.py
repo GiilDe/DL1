@@ -187,11 +187,7 @@ class LinearClassifier(object):
 
         normal = torch.distributions.normal.Normal(0, weight_std)
         self.weights = normal.sample(sample_shape=torch.Size([n_features, n_classes]))
-        '''
-        sigma = math.sqrt(weight_std)
-        rand_weights = torch.randn((n_features, n_classes))
-        self.weights = sigma*rand_weights
-        '''
+
 
     def predict(self, x: Tensor):
         """
@@ -264,9 +260,33 @@ class LinearClassifier(object):
             total_correct = 0
             average_loss = 0
 
-            # ====== YOUR CODE: ======
-            raise NotImplementedError()
-            # ========================
+            # evaluate on training set bathc by batch
+            for idx_batch, sample_batched in enumerate(dl_train):
+                y_pred, x_scores = self.predict(sample_batched[0])
+                total_correct += self.evaluate_accuracy(sample_batched[1], y_pred)
+                average_loss += loss_fn.loss(x=sample_batched[0], y=sample_batched[1], x_scores=x_scores, y_predicted=y_pred)
+                average_loss += (weight_decay/2)*self.weights.norm() # todo: divide by 2? squared ?
+                grad = loss_fn.grad()
+                grad += weight_decay * self.weights
+                self.weights -= learn_rate * grad
+            total_correct *= (1/idx_batch)
+            average_loss *= (1/idx_batch)
+            train_res[0].append(total_correct)
+            train_res[1].append(average_loss)
+
+            total_correct = 0
+            average_loss = 0
+
+            for idx_batch, sample_batched in enumerate(dl_valid):
+                y_pred, x_scores = self.predict(sample_batched[0])
+                total_correct += self.evaluate_accuracy(sample_batched[1], y_pred)
+                average_loss += loss_fn.loss(x=sample_batched[0], y=sample_batched[1], x_scores=x_scores, y_predicted=y_pred)
+                average_loss += weight_decay * self.weights.norm()  # todo: divide by 2? squared ?
+            total_correct *= (1/idx_batch)
+            average_loss *= (1/idx_batch)
+            valid_res[0].append(total_correct)
+            valid_res[1].append(average_loss)
+
             print('.', end='')
 
         print('')
@@ -284,10 +304,27 @@ class LinearClassifier(object):
         # TODO: Convert the weights matrix into a tensor of images.
         # The output shape should be (n_classes, C, H, W).
 
+
+        w_images = torch.zeros(self.n_classes, img_shape[0], img_shape[1], img_shape[2])
+        weights = self.weights
+        if has_bias:
+            weights = weights[:-1]
+        for i in range(self.n_classes):
+            w_images[i] = weights[:,i].reshape(img_shape)
+
+        return w_images
+
+'''
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        weights = self.weights.clone()
+        if has_bias:
+            weights = weights[:-1]
+        w_images = weights.reshape((self.n_classes, *img_shape))
+        # TODO: check about the dim
         # ========================
 
         return w_images
+
+        '''
 
 
