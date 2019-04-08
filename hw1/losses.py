@@ -181,7 +181,8 @@ class SVMHingeLoss(ClassifierLoss):
         x = self.grad_ctx['x']
         G = self.grad_ctx['m']
         G[G > 0] = 1
-        G[torch.arange(y.shape[0]), y.reshape(N)] = -1 * (G.sum(dim=1)-1)
+        # fix the added delta in sum by minus delta
+        G[torch.arange(y.shape[0]), y.reshape(N)] = -1 * (G.sum(dim=1)-self.delta)
         # todo : zero yi cells and delete the +1
         grad = (x.t())@G
         grad = (1/N)*grad
