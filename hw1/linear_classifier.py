@@ -182,7 +182,6 @@ class LinearClassifier(object):
         """
         self.n_features = n_features
         self.n_classes = n_classes
-        self.weights = None
         # TODO: Create weights tensor of appropriate dimensions
         # Initialize it from a normal dist with zero mean and the given std.
 

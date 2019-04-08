@@ -4,8 +4,10 @@ from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
 from sklearn.preprocessing import PolynomialFeatures
 from pandas import DataFrame
 from sklearn.utils import check_array
+from sklearn.model_selection import KFold
 from sklearn.utils.validation import check_is_fitted, check_X_y
 import torch
+from heapq import nlargest
 
 
 class LinearRegressor(BaseEstimator, RegressorMixin):
@@ -26,10 +28,7 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
         """
         X = check_array(X)
         check_is_fitted(self, 'weights_')
-
-        # TODO: Calculate the model prediction, y_pred
-
-        y_pred = X@self.weights_  # todo : check what about the bias
+        y_pred = X@self.weights_  #no need to add bias, you are ok
         return y_pred
 
     def fit(self, X, y):
@@ -80,7 +79,7 @@ class BostonFeaturesTransformer(BaseEstimator, TransformerMixin):
         # TODO: Your custom initialization, if needed
         # Add any hyperparameters you need and save them as above
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # raise NotImplementedError()
         # ========================
 
     def fit(self, X, y=None):
@@ -93,18 +92,15 @@ class BostonFeaturesTransformer(BaseEstimator, TransformerMixin):
         :returns: Matrix of shape (n_samples, n_output_features_).
         """
         X = check_array(X)
-        # check_is_fitted(self, ['n_features_', 'n_output_features_'])
+        #check_is_fitted(self, ['n_features_', 'n_output_features_'])
 
         # TODO: Transform the features of X into new features in X_transformed
         # Note: You can count on the order of features in the Boston dataset
         # (this class is "Boston-specific"). For example X[:,1] is the second
         # feature ('ZN').
-
-        X_transformed = None
-        # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
-
+        #X_transformed = np.delete(X, (1, 3), axis=1) #TODO: make sure the comment is wrong and those are the right indices
+        poly = sklearn.preprocessing.PolynomialFeatures(degree=self.degree, include_bias=False, interaction_only=True)
+        X_transformed = poly.fit_transform(X)
         return X_transformed
 
 
@@ -133,26 +129,30 @@ def top_correlated_features(df: DataFrame, target_feature, n=5):
         corr = nominator / (denominator1 * denominator2)
         return corr
 
-    correlation = []
+    correlations = []
     y = df[target_feature]
     y_expect = np.mean(y)
     y_normalized = (y - y_expect).to_numpy()
     denominator1 = np.sqrt(y_normalized.transpose()@y_normalized)
-    for _, x in df.iteritems():
-        corr = get_corr(x)
-        correlation.append(corr)
 
-    feature_idx = df.columns.get_loc(target_feature)
-    correlation[feature_idx] = 0
-    abs_corr = np.abs(correlation)
-    closest_indices = torch.topk(torch.Tensor(abs_corr), n)[1]
-    to_Return = [(i, correlation[i], abs_corr[i]) for i in closest_indices]
-    to_Return = sorted(to_Return, key=lambda x: x[2], reverse=True)
+    correlations = [(name, get_corr(x)) for name, x in df.iteritems() if name != target_feature]
 
-    top_n_features = [df.columns[i] for i, _, _ in to_Return]
-    top_n_corr = [j for _, j, _ in to_Return]
+    best_five = nlargest(n=5, iterable=correlations, key=lambda r: abs(r[1]))
 
+    top_n_features, top_n_corr = zip(*best_five)
     return top_n_features, top_n_corr
+
+
+def evaluate_accuracy(y: np.ndarray, y_pred: np.ndarray):
+    """
+    Calculates mean squared error (MSE) and coefficient of determination (R-squared).
+    :param y: Target values.
+    :param y_pred: Predicted values.
+    :return: A tuple containing the MSE and R-squared values.
+    """
+    mse = np.mean((y - y_pred) ** 2)
+    rsq = 1 - mse / np.var(y)
+    return mse.item(), rsq.item()
 
 
 def cv_best_hyperparams(model: BaseEstimator, X, y, k_folds,
@@ -168,6 +168,18 @@ def cv_best_hyperparams(model: BaseEstimator, X, y, k_folds,
     :return: A dict containing the best model parameters,
         with some of the keys as returned by model.get_params()
     """
+    def k_foldCV(model, X, y, k_folds, i, j):
+        accuracy_for_params = []
+        kf = KFold(n_splits=k_folds)
+        for train_index, test_index in kf.split(X):
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            accuracy_for_params.append(evaluate_accuracy(y, y_pred)[0])
+
+        return np.mean(accuracy_for_params)
+
 
     # TODO: Do K-fold cross validation to find the best hyperparameters
     #
@@ -177,13 +189,16 @@ def cv_best_hyperparams(model: BaseEstimator, X, y, k_folds,
     #   http://scikit-learn.org/stable/modules/classes.html#module-sklearn.model_selection
     # - If your model has more hyperparameters (not just lambda and degree)
     #   you should add them to the search.
-    # - Use get_params() on your model to see what hyperparameters is has
+    # - Use get_params() on your model to see what hyperparameters it has
     #   and their names. The parameters dict you return should use the same
     #   names as keys.
     # - You can use MSE or R^2 as a score.
 
-    # ====== YOUR CODE: ======
-    raise NotImplementedError()
-    # ========================
+    accuracies = []
+    for i in degree_range:
+        for j in lambda_range:
+            accuracy = k_foldCV(model, X, y, k_folds, i, j)
+            accuracies.append(accuracy, i, j)
 
+    best_params = max(accuracies, key=lambda r: r[0])
     return best_params
