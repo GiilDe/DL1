@@ -37,15 +37,20 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
         :param X: A tensor of shape (N, n_features_) where N is the batch size.
         :param y: A tensor of shape (N,) where N is the batch size.
         """
+
+        N = len(X)
+        n = X.shape[1]
+
+        I = np.identity(n)
+        I[0, 0] = 0
         X, y = check_X_y(X, y)
 
+        left  = np.linalg.inv((1 / N) * X.transpose() @ X + self.reg_lambda * I)
+        right = (1/N)*X.transpose()@y
+        self.weights_ = left@right
         # TODO: Calculate the optimal weights using the closed-form solution
         # Use only numpy functions.
 
-        X = X.transpose()
-        A = X@X.transpose()
-        w_opt = np.linalg.inv(A).dot(X).dot(y)
-        self.weights_ = w_opt
         return self
 
     def fit_predict(self, X, y):
@@ -98,9 +103,9 @@ class BostonFeaturesTransformer(BaseEstimator, TransformerMixin):
         # Note: You can count on the order of features in the Boston dataset
         # (this class is "Boston-specific"). For example X[:,1] is the second
         # feature ('ZN').
-        X_transformed = np.delete(X, (1, 3), axis=1) #TODO: make sure the comment is wrong and those are the right indices
+        X_transformed = np.delete(X, 0, axis=1) #TODO: make sure the comment is wrong and those are the right indices
         poly = sklearn.preprocessing.PolynomialFeatures(degree=self.degree, include_bias=False, interaction_only=True)
-        #X_transformed = poly.fit_transform(X)
+        X_transformed = poly.fit_transform(X_transformed)
         return X_transformed
 
 
@@ -168,22 +173,22 @@ def cv_best_hyperparams(model: BaseEstimator, X, y, k_folds,
     :return: A dict containing the best model parameters,
         with some of the keys as returned by model.get_params()
     """
-    def k_foldCV(model, X, y, k_folds, d, l):
-        model = sklearn.pipeline.make_pipeline(
+    def k_foldCV(d, lam):
+        mod = sklearn.pipeline.make_pipeline(
             BiasTrickTransformer(),
             BostonFeaturesTransformer(degree=d),
-            LinearRegressor(reg_lambda=l)
+            LinearRegressor(reg_lambda=lam)
         )
-        accuracy_for_params = []
+        loss_for_params = []
         kf = KFold(n_splits=k_folds)
         for train_index, test_index in kf.split(X):
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
-            model.fit(X_train, y_train)
-            y_pred = model.predict(X_test)
-            accuracy_for_params.append(evaluate_accuracy(y_test, y_pred)[0])
+            mod.fit(X_train, y_train)
+            y_pred = mod.predict(X_test)
+            loss_for_params.append(evaluate_accuracy(y_test, y_pred)[0])
 
-        return np.mean(accuracy_for_params)
+        return np.mean(loss_for_params)
 
 
     # TODO: Do K-fold cross validation to find the best hyperparameters
@@ -198,14 +203,14 @@ def cv_best_hyperparams(model: BaseEstimator, X, y, k_folds,
     #   names as keys.
     # - You can use MSE or R^2 as a score.
 
-    accuracies = []
+    losses = []
     for d in degree_range:
-        for l in lambda_range:
-            accuracy = k_foldCV(model, X, y, k_folds, d, l)
-            accuracies.append((accuracy, d, l))
+        for lam in lambda_range:
+            loss = k_foldCV(d, lam)
+            losses.append((loss, d, lam))
 
     params = model.get_params()
-    best_paramameters = max(accuracies, key=lambda r: r[0])
+    best_paramameters = min(losses, key=lambda r: r[0])
     best_degree = best_paramameters[1]
     best_lambda = best_paramameters[2]
     best_params = {'bostonfeaturestransformer__degree': best_degree, 'linearregressor__reg_lambda': best_lambda}
